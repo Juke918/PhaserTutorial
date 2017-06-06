@@ -1,0 +1,339 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+	<title>Phaser - Making your first game, part 1</title>
+    <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+function preload() {
+	game.load.image('sky', 'assets/sky.png');
+	game.load.image('ground', 'assets/platform.png');
+	game.load.image('star', 'assets/star.png');
+	game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+	game.load.image('diamond', 'assets/diamond.png');
+	game.load.spritesheet('baddie', 'assets/baddie.png', 32, 32);
+	game.load.image('firsAid', 'assets/firstaid.png');
+    game.load.image('Coyote', 'assets/CoyotePeterson.png');
+
+}
+var platforms;
+var stars;
+var score = 200;
+var scoreText;
+var baddie;
+var starTally;
+function create() {    
+
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+
+    game.add.sprite(0, 0, 'sky');
+
+    Coyote = game.add.sprite(475, 125, 'Coyote');
+    
+
+
+    platforms = game.add.group();
+
+   
+    platforms.enableBody = true;
+
+
+    var ground = platforms.create(0, game.world.height - 64, 'ground');
+
+
+    ground.scale.setTo(2, 2);
+
+
+    ground.body.immovable = true;
+
+
+    var ledge = platforms.create(400, 400, 'ground');
+
+    ledge.body.immovable = true;
+
+    ledge = platforms.create(-150, 250, 'ground');
+
+    ledge.body.immovable = true;
+    
+    ledge = platforms.create(450, 100, 'ground');
+
+    ledge.body.immovable = true;
+
+
+
+
+    player = game.add.sprite(32, game.world.height - 150, 'dude');
+    player.zoomed = false;
+    
+ 
+    game.physics.arcade.enable(player);
+
+    player.body.bounce.y = 0.2;
+    player.body.gravity.y = 500;
+    player.isAlive = true;
+    player.body.collideWorldBounds = true;
+
+
+    player.animations.add('left', [0, 1, 2, 3], 10, true);
+    player.animations.add('right', [5, 6, 7, 8], 10, true);
+
+    baddies = game.add.group();
+
+
+    baddie = game.add.sprite(300, game.world.height - 150, 'baddie');
+    baddie2 = game.add.sprite(550, game.world.height - 300, 'baddie');
+    baddie3 = game.add.sprite(10, game.world.height - 500, 'baddie');
+    baddie4 = game.add.sprite(600, game.world.height - 700, 'baddie');
+              
+    baddies.add(baddie);
+    baddies.add(baddie2);
+    baddies.add(baddie3);
+    baddies.add(baddie4);
+
+    setupBaddie(baddie, 225, 10, 755, true, 2);
+    setupBaddie(baddie2, 135, 400, 755, true, 2);
+    setupBaddie(baddie3, 100, 10, 200, true, 2);
+    setupBaddie(baddie4, 150, 453, 755, true, 2);
+
+
+    starTally = 0
+
+    cursors = game.input.keyboard.createCursorKeys();
+    flyButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+    zoomButton = game.input.keyboard.addKey(Phaser.Keyboard.Z)
+
+    charge = 50
+    zoom = 1
+
+
+
+    stars = game.add.group();
+
+    stars.enableBody = true;
+
+    var diamond = stars.create(280, 5, 'diamond');
+    
+
+    diamond.score = 500;
+    
+    for (var i = 0; i < 12; i++)
+    {
+
+        var star = stars.create(i * 70, 0, 'star');
+        createStars(star);
+   
+        
+        var star = stars.create(i * 70, 250, 'star');
+        createStars(star);
+  
+        var star = stars.create(i * 70, 450, 'star'); 
+        createStars(star);
+    }
+
+    scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000'});
+ 
+}
+
+function createStars(star)
+{
+    star.body.gravity.y = 120;
+    star.body.bounce.y = 0.3 + Math.random() * 0.2;
+    star.score = 10;
+}
+
+function setupBaddie(baddie, speed, leftBound, rightBound, rightState, health)
+{
+    game.physics.arcade.enable(baddie);
+
+    baddie.body.bounce.y = 0.2;
+    baddie.body.gravity.y = 500;
+    baddie.body.collideWorldBounds = true;
+
+    baddie.animations.add('left', [0, 1], 10, true);
+    baddie.animations.add('right', [2, 3], 10, true);
+
+    if(leftBound != null){
+        baddie.leftBound = leftBound;
+    }
+    baddie.rightBound = rightBound;
+    baddie.rightState = rightState;
+    baddie.speed = speed;
+    baddie.health = health;
+}
+
+function update() {
+	game.physics.arcade.collide(baddies, platforms);
+
+	if (player.isAlive == true && score > 20){
+	   score = score - 0.05;
+	   var tempScore = Math.floor(score * 100)/100;
+	   score = tempScore;
+	   scoreText.text = 'Score:' + score;
+	}
+	game.physics.arcade.collide(player, platforms, playerHits, null, this);
+
+	function playerHits (player, platform) {
+		if (player.zoomed == true){
+			player.kill();
+            player.isAlive = false;
+			console.log("Dead player");
+		}
+
+	}
+
+    function hitBaddie (player, baddie){
+        if(baddie.body.touching.up == true){
+            score += 5  
+            scoreText.text = 'Score:' + score;
+            baddie.health -= 1;
+            console.log(baddie.health);
+            if(baddie.health == 0)
+            {
+                console.log("Dead baddie");
+                baddie.kill();
+            } 
+            else
+            {
+                player.body.velocity.y = -150;
+            }   
+            
+        }
+        else{
+            player.kill();
+            player.isAlive = false;
+            console.log("Dead player");
+        }
+    }
+
+    game.physics.arcade.collide(player, baddie, hitBaddie, null, this);
+    game.physics.arcade.collide(player, baddie2, hitBaddie, null, this);
+    game.physics.arcade.collide(player, baddie3, hitBaddie, null, this);
+    game.physics.arcade.collide(player, baddie4, hitBaddie, null, this);
+
+    if (baddie2.body.touching.down)
+    {
+        baddie2.body.velocity.y = -275;
+    }
+
+
+	if (player.zoomed == true && player.body.position.y < 1){
+
+		player.kill();
+        player.isAlive = false;
+	}
+
+    player.body.velocity.x = 0;
+
+    if (cursors.left.isDown)
+    {
+        player.body.velocity.x = -150;
+
+
+        player.animations.play('left');
+
+    }
+    else if (cursors.right.isDown)
+    {
+        player.body.velocity.x = 150;
+
+
+        player.animations.play('right');
+
+    }
+    else
+    {
+        player.animations.stop();
+
+        player.frame = 4;
+    }
+    
+    if (cursors.up.isDown && player.body.touching.down)
+    {
+        player.body.velocity.y = -300;
+    }
+    if (flyButton.isDown && charge > 0)
+    {
+    	player.body.velocity.y = -100;
+    	charge -= 1;
+    }else if(player.body.touching.down && charge < 50)
+    {
+    	charge += 5;
+    }
+    if (zoomButton.isDown && zoom > 0 && starTally == 36)
+    {
+    	player.body.gravity.y =0;
+    	player.body.velocity.y = -500;
+    	player.zoomed = true;
+    	zoom -= 100;
+    } 
+
+    game.physics.arcade.collide(stars, platforms);
+
+    game.physics.arcade.overlap(player, stars, collectStar, null, this);
+    
+    function collectStar (player, star) {
+    	star.kill();
+    	score += star.score;
+    	scoreText.text = 'Score:' + score;
+        starTally += 1;
+        console.log(starTally);
+
+    }
+
+
+    if (score >515 && player.zoomed)
+    {
+    	player.isAlive = false;
+    	player.kill();
+    }
+    
+    for(var i = 0; i < 4; i++){
+        BaddieUpdate(baddies.children[i]);
+    }
+
+    if (player.body.position.x == 315 && player.body.position.y > -1 && player.body.position.y < 3){
+        console.log('cheating');
+        charge = 0;
+        player.body.position.x = 400;
+    }
+
+}
+
+function BaddieUpdate(b)
+{
+
+    if (b.RightState == true){
+        b.body.velocity.x = b.speed;
+        b.animations.play('right');
+
+    }
+    else {
+        b.body.velocity.x = -b.speed;
+        b.animations.play('left');
+    }
+
+    if (b.body.position.x >= b.rightBound){
+        b.RightState = false;
+    }
+    if (b.body.position.x <= b.leftBound){
+        b.RightState = true;
+    }
+
+}
+
+</script>
+
+</body>
+</html>
