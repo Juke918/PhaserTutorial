@@ -176,7 +176,7 @@ function setupBaddie(baddie, speed, leftBound, rightBound, rightState, health)
 function update() {
 	game.physics.arcade.collide(baddies, platforms);
 
-	if (player.isAlive == true && score > 19){
+	if (player.isAlive == true && score > 20){
 	   score = score - 0.05;
 	   var tempScore = Math.floor(score * 100)/100;
 	   score = tempScore;
